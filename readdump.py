@@ -20,19 +20,24 @@ class Canaryborn(Enum):
 #provinces=["Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "Cuenca", "Gerona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Jaén", "La Coruña", "La Rioja", "Las Palmas", "León", "Lérida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Orense", "Palencia", "Pontevedra", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla", "Soria", "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"];
 provinces=["Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "Cuenca", "Gerona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Jaén", "La Coruña", "La Rioja", "León", "Lérida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Orense", "Palencia", "Pontevedra", "Salamanca", "Segovia", "Sevilla", "Soria", "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"];
 canaryplaces={
-    "La Orotava" : "Tenerife", "Puerto de la Cruz" : "Tenerife", "Los Realejos" : "Tenerife", "San Cristóbal de La Laguna" : "Tenerife",
-    "La Perdoma" : "Tenerife", "Santa Cruz de tenerife" : "Tenerife",
+    "La Orotava" : "Tenerife", "Puerto de la Cruz" : "Tenerife", "Los Realejos" : "Tenerife", 
+    "San Cristóbal de La Laguna" : "Tenerife", "San Cristobal de La Laguna" : "Tenerife",
+    "La Perdoma" : "Tenerife", "Santa Cruz de tenerife" : "Tenerife", "Icod de Los Vinos" : "Tenerife",
+    "Güímar" : "Tenerife",
     "Garachico" : "Tenerife", "Candelaria" : "Tenerife", "Guía de Isora" : "Tenerife", "Arafo" : "Tenerife", "San Miguel de Abona" : "Tenerife",
     "Granadilla de Abona" : "Tenerife", "La Guancha" : "Tenerife", "Tacoronte" : "Tenerife",
-    "Santa Cruz de La Palma" : "La Palma",
-    "Tazacorte" : "La Palma", 
+    "Arico" : "Tenerife", "El Sauzal" : "Tenerife", "Icod de los Vinos" : "Tenerife", "Arona" : "Tenerife",
+    "Santa Cruz de La Palma" : "La Palma", "Los Llanos de Aridane" : "La Palma",
+    "Tazacorte" : "La Palma",  "El Paso" : "La Palma", "Tijarafe" : "La Palma", "Breña Baja" : "La Palma",
+    "Garafía" : "La Palma", "La Palma" : "La Palma", "San Andrés y Sauces" : "La Palma", 
     "Valverde" : "El Hierro", "El Pinar" : "El Hierro", "El Hierro" : "El Hierro",
     "San Bartolomé" : "Lanzarote", "Arrecife" : "Lanzarote",
     "Hermigua" : "La Gomera",
     "Puerto del Rosario" : "Fuerteventura",
     "Vecindario" : "Gran Canaria", "Agaete" : "Gran Canaria", "Gran Canaria" : "Gran Canaria",
     "Teror" : "Gran Canaria", "Telde" : "Gran Canaria", "Santa Brígida" : "Gran Canaria",
-    "Las Palmas" : "Gran Canaria", "Tenerife" : "Tenerife", "Gomera" : "La Gomera", "Lanzarote" : "Lanzarote", "Fuerteventura" : "Fuerteventura"}
+    "Las Palmas" : "Gran Canaria", "Tenerife" : "Tenerife", "Gomera" : "La Gomera", "Lanzarote" : "Lanzarote", "Fuerteventura" : "Fuerteventura",
+    "Islas Canarias" : "Islas Canarias"}
 nacimientos = 0
 totalcanarios = 0
 sindatos = 0
@@ -88,7 +93,7 @@ def testBornSite(listofpersons):
             nacimientos +=  1
             #totalcanarios = totalcanarios + 1
             if checkBorn == Canaryborn.unknown:
-                print(checkBornResult + person['title'] + '\t' + data['Nacimiento'])
+                print(checkBornResult + person['title'] + '\t' + str(person['backlinks']) + '\t' + data['Nacimiento'] + '\t' + person['categoria'])
 
         else:
             #print("NO VCARD:   " + person['categoria'] + '\t'  +person['title'])
