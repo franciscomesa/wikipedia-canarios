@@ -5,6 +5,10 @@ import json
 import wikipediaapi
 from bs4 import BeautifulSoup
 import pprint
+import pickle
+
+totalcanarios = 1
+paginascanarios = {}
 
 # https://es.wikipedia.org/w/api.php?action=query&list=categorymembers&cmpageid=132668&format=json&cmlimit=500
 # https://www.mediawiki.org/wiki/API:Categorymembers
@@ -15,21 +19,23 @@ import pprint
 #
 #
 def getVcard(pagina):
-    print("\t\t", pagina)
+    #print("\t\t", pagina)
     page = urllib.request.urlopen(pagina)
     soup = BeautifulSoup(page.read(),"html.parser" )
     table = soup.find('table', class_='infobox')
     result = {}
     exceptional_row_count = 0
-    for tr in table.find_all('tr'):
-        if tr.find('th') and tr.find('td') != None:
-            result[tr.find('th').text] = tr.find('td').text
-        else:
-            # the first row Logos fall here
-            exceptional_row_count += 1
-    if exceptional_row_count > 1:
-        print('') # 'WARNING ExceptionalRow>1: ', table)
-    print(".......RESULTADO:", pprint.pformat(result))
+    if table != None:
+        for tr in table.find_all('tr'):
+            if tr.find('th') and tr.find('td') != None:
+                result[tr.find('th').text.replace('\n', '  ').replace(u'\xa0', u' ')] = tr.find('td').text.replace('\n', '  ').replace(u'\xa0', u' ')
+            else:
+                # the first row Logos fall here
+                exceptional_row_count += 1
+        if exceptional_row_count > 1:
+            print('') # 'WARNING ExceptionalRow>1: ', table)
+        #print(".......RESULTADO:", pprint.pformat(result))
+    return result
 
 
 
@@ -38,7 +44,6 @@ def getList(dict):
     list = [] 
     for key in dict.keys(): 
         list.append(key) 
-          
     return list
 
 
@@ -51,23 +56,56 @@ def print_sections(sections, level=0):
 
 
 
-def print_categorymembers(categorymembers, level=0, max_level=2):
+def print_categorymembers(categorymembers, level=0, categoria='', max_level=200):
+        global totalcanarios
+        global paginascanarios
         for c in categorymembers.values():
-            
 #            print("%s: %s (ns: %d) -> l:%d" % ("*" * (level + 1), c.title, c.ns, len(c.backlinks)  ))            
             if c.ns == wikipediaapi.Namespace.CATEGORY and level < max_level:
-                print_categorymembers(c.categorymembers, level=level + 1, max_level=max_level)
-            elif c.ns == wikipediaapi.Namespace.MAIN  :
-                print("%s: %s (ns: %d) -> l:%d" % ("*" * (level + 1), c.title, c.ns, len(c.backlinks)  )) 
-                print("\t", len(c.sections) ) # print_sections
-                wiki = wikipediaapi.Wikipedia(LANG)
+                #print(">>>>>>>>>>>> Category members: "+c.title + "<<<<<<<<<<<<")
+                print_categorymembers(c.categorymembers, level=level + 1, categoria=c.title, max_level=max_level)
+            elif c.ns == wikipediaapi.Namespace.MAIN :
+                #id, profundidad, nombre, links, idiomas, secciones, url,
+                wiki = wikipediaapi.Wikipedia(LANG) 
                 page = wiki.page(c.title)
-                print("\t", page.fullurl  )
-                getVcard(page.fullurl)
-                print("\t%d > %s" % (len(c.langlinks),str(getList(c.langlinks))) )
-                #print("\t", str(getList(c.langlinks)))
-                
-
+                #page.wpaginadictiki.pageid
+                if c.__dict__.get('pageid') in paginascanarios:
+                    print("ya estaba: " + str(c.__dict__.get('pageid')) + " " + c.title)
+                else:
+                    canario =  {}
+                    canario = {"id" : c.__dict__.get('pageid'),
+                        "title" : c.title,
+                        "categoria" : categoria,
+                        "level" : "*" * (level + 1),
+                        "backlinks" : len(c.backlinks),
+                        "languages" : str(getList(c.langlinks)),
+                        "languagesdetail" : c.langlinks,
+                        "numlanguages" : len(c.langlinks),
+                        "numsections" : len(c.sections),
+                        "fullurl" : page.fullurl,
+                        "vcard" : getVcard(page.fullurl)
+                    }
+                    #print(canario)
+                    paginascanarios[c.__dict__.get('pageid')] = canario
+                    print("%d, %s, %s %s, %s, %d, %d, %d, %s, %s" % 
+                        (totalcanarios,
+                        categoria.replace('Categoría:',''),
+                            c.__dict__.get('pageid')  , 
+                        "*" * (level + 1), 
+                        c.title,
+                        len(c.backlinks),
+                        len(c.langlinks),
+                        len(c.sections),
+                        len(getList(c.langlinks)),
+                        page.fullurl
+                    )) 
+                    totalcanarios = totalcanarios + 1
+                #print("%s: %s (ns: %d) -> l:%d" % ("*" * (level + 1), c.title, c.ns, len(c.backlinks)  )) 
+                #print("\t", len(c.sections) ) # print_sections
+                #print("\t", page.fullurl  )
+                    #getVcard(page.fullurl)
+                #print("\t%d > %s" % (len(c.langlinks),str(getList(c.langlinks))) )
+                ###print("\t", str(getList(c.langlinks)))
 
 
 def listaPaginasporID(pageid):
@@ -115,8 +153,8 @@ wikipedia.set_lang(LANG)
 
 canarios = wikipedia.page(CATEGORIAORIGEN)
 
-print(canarios)
-print(canarios.links)
+#print(canarios)
+#print(canarios.links)
 
 # Library wikipedia-api
 wiki_wiki = wikipediaapi.Wikipedia(LANG)
@@ -139,17 +177,26 @@ print("https://es.wikipedia.org/w/api.php?action=query&list=categorymembers&cmti
 #subcategorias = listaCategoriasporID(IDCATEGORIAORIGEN)
 #print(subcategorias)
 #print ("Obtenemos páginas")
-paginas = listaPaginasporID(IDCATEGORIAORIGEN)
-print("paginas")
-print(paginas)
+#paginas = listaPaginasporID(IDCATEGORIAORIGEN)
+#print("paginas")
+#print(paginas)
 
 # Copiado de https://pypi.org/project/Wikipedia-API/
 cat = wiki_wiki.page(CATEGORIAORIGEN)
-print("Category members: "+CATEGORIAORIGEN)
-print_categorymembers(cat.categorymembers)
+print(">>>>>>>>>>>> Category members: "+CATEGORIAORIGEN + "<<<<<<<<<<<<")
+print_categorymembers(cat.categorymembers, categoria=CATEGORIAORIGEN)
 
-for p in paginas:
-    pagina = wikipedia.page(None,p)
-    print(pagina)
-    page_py = wiki_wiki.page(p)
-    print(page_py)
+print ("\n\n        ----- FIN -----")
+
+ 
+
+fp = open("canarios.pkl","wb")
+pickle.dump(paginascanarios,fp)
+fp.close()
+
+
+#for p in paginas:
+#    pagina = wikipedia.page(None,p)
+#    print(pagina)
+#    page_py = wiki_wiki.page(p)
+#    print(page_py)
