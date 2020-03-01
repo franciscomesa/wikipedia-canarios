@@ -4,7 +4,7 @@ import urllib
 import json
 import wikipediaapi
 from bs4 import BeautifulSoup
-import pprint
+#import pprint
 import pickle
 
 totalcanarios = 1
@@ -14,7 +14,7 @@ paginascanarios = {}
 # https://www.mediawiki.org/wiki/API:Categorymembers
 
 
-# Hay diferentes tipos de vcard 
+# Hay diferentes tipos de vcard
 #   infobox
 #
 #
@@ -50,17 +50,17 @@ def getList(dict):
 # De la documentación de Wikipediaapi
 # Muestra las secciones de la página
 def print_sections(sections, level=0):
-        for s in sections:
-                print("\t\t%s: %s - %s" % ("*" * (level + 1), s.title, s.text[0:40]))
-                print_sections(s.sections, level + 1)
+    for s in sections:
+        print("\t\t%s: %s - %s" % ("*" * (level + 1), s.title, s.text[0:40]))
+        print_sections(s.sections, level + 1)
 
 
 
 def print_categorymembers(categorymembers, level=0, categoria='', max_level=200):
-        global totalcanarios
-        global paginascanarios
-        for c in categorymembers.values():
-#            print("%s: %s (ns: %d) -> l:%d" % ("*" * (level + 1), c.title, c.ns, len(c.backlinks)  ))            
+    global totalcanarios
+    global paginascanarios
+    for c in categorymembers.values():
+#       print("%s: %s (ns: %d) -> l:%d" % ("*" * (level + 1), c.title, c.ns, len(c.backlinks)  ))            
             if c.ns == wikipediaapi.Namespace.CATEGORY and level < max_level:
                 #print(">>>>>>>>>>>> Category members: "+c.title + "<<<<<<<<<<<<")
                 print_categorymembers(c.categorymembers, level=level + 1, categoria=c.title, max_level=max_level)
