@@ -1,6 +1,9 @@
 import pickle
 from enum import Enum
 import pageviewapi
+import wikipediaapi
+
+
 # API page views Wikipedia https://wikitech.wikimedia.org/wiki/Analytics/AQS/Pageviews#Monthly_counts
 # https://pypi.org/project/pageviewapi/
 # R: https://cran.r-project.org/web/packages/pageviews/vignettes/Accessing_Wikimedia_pageviews.html
@@ -28,7 +31,7 @@ WIKI_REP = 'es.wikipedia'
 provinces=["Alcalá de Henares", "Palma de Mallorca", "Vitoria", "Bilbao", 
     "Reus", "Fuencalderas", "Tarancón", "Miranda de Ebro", "Jérez del Marquesado","Barbastro","Azpeitia","Suecia","Reino Unido",
     "Reus", "Calatayud","Maiquetía", "Sicilia", "Alemania","Legazpia","Marsella", "Francia","Vich","Roma", "Cuba","Estados Unidos","Alcaudete",
-     "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "Cuenca", "Gerona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Jaén", "La Coruña", "La Rioja", "León", "Lérida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Orense", "Palencia", "Pontevedra", "Salamanca", "Segovia", "Sevilla", "Soria", "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"];
+     "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "Cuenca", "Gerona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Jaén", "La Coruña", "La Rioja", "León", "Lérida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Orense", "Palencia", "Pontevedra", "Salamanca", "Segovia", "Sevilla", "Soria", "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"]
 canaryplaces={
     "La Orotava" : "Tenerife", "Puerto de la Cruz" : "Tenerife", "Los Realejos" : "Tenerife", 
     "San Cristóbal de La Laguna" : "Tenerife", "San Cristobal de La Laguna" : "Tenerife",
@@ -38,7 +41,7 @@ canaryplaces={
     "Granadilla de Abona" : "Tenerife", "La Guancha" : "Tenerife", "Tacoronte" : "Tenerife",
     "Arico" : "Tenerife", "El Sauzal" : "Tenerife", "Icod de los Vinos" : "Tenerife", "Arona" : "Tenerife",
     "Santa Cruz de La Palma" : "La Palma", "Los Llanos de Aridane" : "La Palma",
-    "Tazacorte" : "La Palma",  "El Paso" : "La Palma", "Tijarafe" : "La Palma", "Breña Baja" : "La Palma",
+    "Tazacorte" : "La Palma",  "El Paso" : "La Palma", "Tijarafe" : "La Palma", 
     "Garafía" : "La Palma", "La Palma" : "La Palma", "San Andrés y Sauces" : "La Palma", 
     "Valverde" : "El Hierro", "El Pinar" : "El Hierro", "El Hierro" : "El Hierro",
     "Ingenio" : "Gran Canaria", "Mogán" : "Gran Canaria", "Gáldar" : "Gran Canaria", "Arucas" : "Gran Canaria", "Agüimes" : "Gran Canaria",
@@ -66,15 +69,46 @@ nocanarios = 0
 nosesabe = 0
 
 
+def sumPageViewsWikis(page, wikis):
+    resultado = sumPageViews(page)
+    #print('>resultado parcial (es) : ' + str(resultado) + ' >' + page)
+    if len(wikis) > 0:
+#        print(' no wiki lang list')
+#        resultado = sumPageViews(page)
+#    else:
+        for repo in wikis.keys():
+            wiki = wikipediaapi.Wikipedia(repo) 
+            pagelang = wiki.page(wikis[repo].title)
+            titleRepo = str(wikis[repo])
+            #print('pagelang:' + titleRepo+'.')
+            #print(titleRepo[0:titleRepo.index(' (')])
+            #print('\t\t\t.'+titleRepo[0:titleRepo.index(' (id:')] + '. ' + repo )
+            resultadoParcial = sumPageViews(titleRepo[0:titleRepo.index(' (id:')], repo)
+            resultado += resultadoParcial
+            #print('\t\t\t-'+wikis[repo].title + '-\t' + str(resultadoParcial))
+            #print('.'+titleRepo[0:titleRepo.index(' (')] +'.')
+    #print('>>>>Resultado final: ' + str(resultado))
+    return resultado
+            
+
+    
 
 def sumPageViews(page, wiki_language = 'es'):
-    views = pageviewapi.per_article(wiki_language + '.wikipedia', page, DATE_INI, DATE_END,
+    resultado = 0
+    #print('>'+wiki_language + ' .')
+    #print(page)
+    try:
+        views = pageviewapi.per_article(wiki_language + '.wikipedia', page, DATE_INI, DATE_END,
                         access='all-access', agent='all-agents', granularity='daily')
-    #print(tmp_vistas)
-    #print(len(views['items']))    
-    #print(sum(int(item['views']) for item in views['items']))
-    return sum(int(item['views']) for item in views['items'])
-
+        resultado = sum(int(item['views']) for item in views['items'])
+        #print(tmp_vistas)
+        #print(len(views['items']))    
+        #print(sum(int(item['views']) for item in views['items']))
+    except:
+        print('\t\tERROR DATA:(' + wiki_language + ')' + page)
+        resultado = -1
+    finally:
+        return resultado
 
 
 def processBorn(born):
@@ -103,9 +137,12 @@ def testBornSite(listofpersons):
     global nocanarios
     global sindatos
     global nosesabe
+    strFichero = ''
+    bucle = 1
     for idwikipedia in listofpersons:
         person = listofpersons[idwikipedia]
         data = person['vcard']
+        strParcial = ''
         #print(person['title'] + '\t' + str(len(data)))
         #if person['categoria'].find('Obispos') == -1 \
         #and person['categoria'].find('Religiosos') == -1:
@@ -127,12 +164,29 @@ def testBornSite(listofpersons):
                 nosesabe += 1
             nacimientos +=  1
             #totalcanarios = totalcanarios + 1
-            if checkBorn == Canaryborn.unknown or checkBorn == Canaryborn.canary:
-                print(checkBornResult + person['title'] + '\t' + str(person['backlinks']) + '\t' + str(sumPageViews(person['title'])) + '\t' + data['Nacimiento'] + '\t' + person['categoria'])
-                print('\t\t\t' + data.get('Origen', 'N/A'))
+            # TODOS SON CANARIOS
+            allWikisViews = sumPageViewsWikis(person['title'], person['languagesdetail'])
+            strParcial = str(bucle) + ' ' + checkBornResult + person['title'] + '\t' + str(person['backlinks']) + '\t' + str(sumPageViews(person['title'])) + '\t' + str(allWikisViews) + '\t' + str(person['numlanguages']) + '\t' + data['Nacimiento'] + '\t' + person['categoria'].replace('\n', ' ')
+            #print(strParcial)
+            #if checkBorn == Canaryborn.unknown or checkBorn == Canaryborn.canary:
+                #print(str(bucle) + ' ' + checkBornResult + person['title'] + '\t' + str(person['backlinks']) + '\t' + str(sumPageViews(person['title'])) + '\t' + data['Nacimiento'] + '\t' + person['categoria'])
+                #if checkBorn == Canaryborn.unknown:
+                #    print('\t\t\t' + data.get('Origen', 'N/A'))
+                #print('\t\t\t' + str(person['languagesdetail']))
+                #sumPageViewsWikis(person['title'], person['languagesdetail'])
         else:
             #print("NO VCARD:   " + person['categoria'] + '\t'  +person['title'])
             sindatos += 1
+            allWikisViews = sumPageViewsWikis(person['title'], person['languagesdetail'])
+            strParcial = str(bucle) + ' ' + checkBornResult + person['title'] + '\t' + str(person['backlinks']) + '\t' + str(sumPageViews(person['title'])) + '\t' + str(allWikisViews) + '\t' + str(person['numlanguages']) + '\tSINVCARD\t' + person['categoria'].replace('\n', ' ')
+            #print(strParcial)
+            
+        print (strParcial)
+        strFichero += strParcial + '\n'    
+        bucle += 1
+    fp = open("wikipedia-canarios.csv","wb")
+    fp.write(strFichero )
+    fp.close()    
             
 
 
@@ -141,17 +195,16 @@ def testBornSite(listofpersons):
 with open("canarios.pkl","rb") as fp:
     canarios = pickle.load(fp)
 
-print('Paris         ' + str(sumPageViews('Paris'))) 
-print('Madrid        ' + str(sumPageViews('Madrid')))
-print('Madrid(en)    ' + str(sumPageViews('Madrid', 'en'))) 
-print('Tenerife      ' + str(sumPageViews('Tenerife'))) 
-print('Pedro Guerra  ' + str(sumPageViews('Pedro Guerra'))) 
+#print('Paris         ' + str(sumPageViews('Paris'))) 
+#print('Madrid        ' + str(sumPageViews('Madrid')))
+#print('Madrid(en)    ' + str(sumPageViews('Madrid', 'en'))) 
+#print('Tenerife      ' + str(sumPageViews('Tenerife'))) 
+#print('Pedro Guerra  ' + str(sumPageViews('Pedro Guerra'))) 
 
 
-print(len(canarios))
+print("Total canarios: " + str(len(canarios)))
+print("Lugar\tNombre\tBacklinks\tPageviews(ES)\tNacimiento\tCategoria")
 testBornSite(canarios)
-
-
 
 print("---------------\nResume:\n")
 print('\tTotal:            ' + str(len(canarios)))
