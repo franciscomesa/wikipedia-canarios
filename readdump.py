@@ -141,6 +141,8 @@ def testBornSite(listofpersons):
     bucle = 1
     for idwikipedia in listofpersons:
         person = listofpersons[idwikipedia]
+        #if person['title'].find('Carla') == -1:
+        #    continue
         data = person['vcard']
         strParcial = ''
         #print(person['title'] + '\t' + str(len(data)))
@@ -184,7 +186,7 @@ def testBornSite(listofpersons):
         print (strParcial)
         strFichero += strParcial + '\n'    
         bucle += 1
-    fp = open("wikipedia-canarios.csv","wb")
+    fp = open("wikipedia-canarios.csv","w")
     fp.write(strFichero )
     fp.close()    
             
